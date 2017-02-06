@@ -11,8 +11,8 @@
     var currentScriptPath = scripts[scripts.length - 1].src;
 
     angular
-        .module('acAutocomplete', ['ngRoute'])
-        .component('acAutocomplete', {
+        .module('mvAutocomplete', ['ngRoute'])
+        .component('mvAutocomplete', {
             bindings: {
                 searchFunction: '&',
                 searchFields: '=',
@@ -24,14 +24,14 @@
             },
             template: '' +
             '<input type="text" ' +
-            'id="ac-autocomplete-{{$ctrl.id}}" ' +
+            'id="mv-autocomplete-{{$ctrl.id}}" ' +
             'ng-change="$ctrl.getList();" ' +
             'ng-model="$ctrl.searchText" autocomplete="off">',
-            controller: AcAutocompleteController
+            controller: MvAutocompleteController
         });
 
 
-    AcAutocompleteController.$inject = ["$element", "$scope", "$compile", "$timeout", "AcUtils"];
+    MvAutocompleteController.$inject = ["$element", "$scope", "$compile", "$timeout", "AcUtils"];
     /**
      * @param searchFunction Función de búsqueda, siempre es una función que trae todo y se filtra dentro del componente
      * @param searchFields Campos por los cuales se debe realizar el filtro
@@ -43,7 +43,7 @@
      * @param $scope
      * @constructor
      */
-    function AcAutocompleteController($element, $scope, $compile, $timeout, AcUtils) {
+    function MvAutocompleteController($element, $scope, $compile, $timeout, AcUtils) {
         var vm = this;
         // identificador único del scope dentro la vista
         vm.id = $scope.$id;
@@ -93,6 +93,7 @@
                 vm.cacheList.filter(function (e, i, a) {
                     vm.camposAComparar.forEach(function (elem, index, array) {
                         if (!vm.filteredList.hasOwnProperty(i)) {
+                            console.log(e[elem].toUpperCase());
                             if (e[elem] != null && ((vm.exacto && e[elem].toUpperCase() == vm.searchText.toUpperCase()) ||
                                 (!vm.exacto && e[elem].toUpperCase().indexOf(vm.searchText.toUpperCase()) > -1))) {
                                 return vm.filteredList[i] = e;
@@ -105,12 +106,13 @@
 
         }
 
+
         /**
          * Muestra los datos y agrega funciones necesarias para selección, devolución y ocultación de paneles
          */
         function finish() {
             //console.log(vm.filteredList);
-            var panel = document.getElementById("ac-autocomplete-panel-" + vm.id);
+            var panel = document.getElementById("mv-autocomplete-panel-" + vm.id);
 
             if (panel != null) {
                 panel.remove();
@@ -123,9 +125,9 @@
                 // Genero el detalle a partir de la lista filtrada
                 vm.filteredList.forEach(function (e, i, a) {
                     detalle = detalle +
-                        '<li id="ac-autocomplete-li-' + i + '" ng-click="$ctrl.select(' + i + ')" ' +
+                        '<li id="mv-autocomplete-li-' + i + '" ng-click="$ctrl.select(' + i + ')" ' +
                         'ng-mouseover="$ctrl.select(' + i + ', $event)" ' +
-                        'ng-class="{\'ac-autocomplete-selected\':$ctrl.indexSelected==\'' + i + '\'}">';
+                        'ng-class="{\'mv-autocomplete-selected\':$ctrl.indexSelected==\'' + i + '\'}">';
                     vm.camposAMostrar.forEach(function (elem, index, array) {
                         if (elem.indexOf('[') > -1) {
                             var subElems = elem.split('.');
@@ -140,7 +142,7 @@
                     detalle = detalle + '</li>';
                 });
                 // Lo agrego luego de la instancia del componente
-                $element.append($compile('<ul class="ac-autocomplete-panel" id="ac-autocomplete-panel-' + vm.id + '">' + detalle + '</ul>')($scope));
+                $element.append($compile('<ul class="mv-autocomplete-panel" id="mv-autocomplete-panel-' + vm.id + '">' + detalle + '</ul>')($scope));
 
                 select(Object.keys(vm.filteredList)[0]);
             } else {
@@ -166,13 +168,13 @@
                     // arreglo para que el scroll se mueva con el foco
                     // no se ejecuta en el mouse over, solo este evento envía el event.
                     if (event == undefined) {
-                        var lu = angular.element(document.querySelector('#ac-autocomplete-panel-' + vm.id));
+                        var lu = angular.element(document.querySelector('#mv-autocomplete-panel-' + vm.id));
 
                         var he = 0;
                         var encontrado = false;
                         if (lu[0] != undefined) {
                             for (var i = 0; i < lu[0].childNodes.length; i++) {
-                                //if (lu[0].childNodes[i].className == 'ac-autocomplete-selected') {
+                                //if (lu[0].childNodes[i].className == 'mv-autocomplete-selected') {
                                 if (lu[0].childNodes[i].id.split('-')[3] == index) {
                                     encontrado = i;
                                     break;
@@ -253,7 +255,7 @@
                 vm.searchText = vm.selectedTo[vm.camposAMostrar[0]];
             }
 
-            var panel = document.getElementById("ac-autocomplete-panel-" + vm.id);
+            var panel = document.getElementById("mv-autocomplete-panel-" + vm.id);
             if (panel != null) {
                 panel.remove();
             }
