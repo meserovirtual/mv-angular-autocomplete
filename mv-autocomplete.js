@@ -31,7 +31,7 @@
         });
 
 
-    MvAutocompleteController.$inject = ["$element", "$scope", "$compile", "$timeout", "AcUtils"];
+    MvAutocompleteController.$inject = ["$element", "$scope", "$compile", "$timeout", "MvUtils"];
     /**
      * @param searchFunction Función de búsqueda, siempre es una función que trae todo y se filtra dentro del componente
      * @param searchFields Campos por los cuales se debe realizar el filtro
@@ -43,7 +43,7 @@
      * @param $scope
      * @constructor
      */
-    function MvAutocompleteController($element, $scope, $compile, $timeout, AcUtils) {
+    function MvAutocompleteController($element, $scope, $compile, $timeout, MvUtils) {
         var vm = this;
         // identificador único del scope dentro la vista
         vm.id = $scope.$id;
