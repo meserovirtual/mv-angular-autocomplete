@@ -48,6 +48,11 @@
         // identificador único del scope dentro la vista
         vm.id = $scope.$id;
 
+        console.log(vm.searchFields);
+        console.log(vm.fieldsToShow);
+        //vm.searchFields = "nombre";
+        //vm.fieldsToShow = "nombre";
+
         vm.indexSelected = -1;
         vm.searchText = '';
         vm.cacheList = [];
@@ -56,7 +61,6 @@
         vm.camposAMostrar = (vm.fieldsToShow) ? vm.fieldsToShow.split(',') : [];
         vm.exacto = (vm.exact) ? vm.exact : false;
         vm.clear = (vm.clear) ? vm.clear : false;
-
 
         vm.getList = getList;
         vm.select = select;
@@ -72,15 +76,15 @@
             // TODO: No me convence que si los datos tienen cambio, esto no se entera
             //if (vm.cacheList == undefined || vm.cacheList.length == 0 || vm.clear) {
 
-                vm.searchFunction({
-                    callback: function (data) {
-                        vm.cacheList = data;
-                        filter();
-                    }
-                });
+            vm.searchFunction({
+                callback: function (data) {
+                    vm.cacheList = data;
+                    filter();
+                }
+            });
             //} else {
 
-                //filter();
+            //filter();
             //}
         }
 
@@ -93,7 +97,6 @@
                 vm.cacheList.filter(function (e, i, a) {
                     vm.camposAComparar.forEach(function (elem, index, array) {
                         if (!vm.filteredList.hasOwnProperty(i)) {
-                            console.log(e[elem].toUpperCase());
                             if (e[elem] != null && ((vm.exacto && e[elem].toUpperCase() == vm.searchText.toUpperCase()) ||
                                 (!vm.exacto && e[elem].toUpperCase().indexOf(vm.searchText.toUpperCase()) > -1))) {
                                 return vm.filteredList[i] = e;
