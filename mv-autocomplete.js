@@ -45,251 +45,255 @@
      */
     function MvAutocompleteController($element, $scope, $compile, $timeout, MvUtils) {
         var vm = this;
-        // identificador único del scope dentro la vista
-        vm.id = $scope.$id;
 
-        console.log(vm.searchFields);
-        console.log(vm.fieldsToShow);
-        //vm.searchFields = "nombre";
-        //vm.fieldsToShow = "nombre";
+        $timeout(function(){
+            // identificador único del scope dentro la vista
+            vm.id = $scope.$id;
 
-        vm.indexSelected = -1;
-        vm.searchText = '';
-        vm.cacheList = [];
-        vm.filteredList = [];
-        vm.camposAComparar = (vm.searchFields) ? vm.searchFields.split(',') : [];
-        vm.camposAMostrar = (vm.fieldsToShow) ? vm.fieldsToShow.split(',') : [];
-        vm.exacto = (vm.exact) ? vm.exact : false;
-        vm.clear = (vm.clear) ? vm.clear : false;
+            console.log(vm.searchFields);
+            console.log(vm.fieldsToShow);
+            //vm.searchFields = "nombre";
+            //vm.fieldsToShow = "nombre";
 
-        vm.getList = getList;
-        vm.select = select;
+            vm.indexSelected = -1;
+            vm.searchText = '';
+            vm.cacheList = [];
+            vm.filteredList = [];
+            vm.camposAComparar = (vm.searchFields) ? vm.searchFields.split(',') : [];
+            vm.camposAMostrar = (vm.fieldsToShow) ? vm.fieldsToShow.split(',') : [];
+            vm.exacto = (vm.exact) ? vm.exact : false;
+            vm.clear = (vm.clear) ? vm.clear : false;
+
+            vm.getList = getList;
+            vm.select = select;
 
 
-        /**
-         * Obtiene la lista completa de datos relacionados el input
-         * Se ejecuta en el on-change del input
-         */
-        function getList() {
+            /**
+             * Obtiene la lista completa de datos relacionados el input
+             * Se ejecuta en el on-change del input
+             */
+            function getList() {
 
-            // Si no está en el caché, la vuelvo a ejecutar, lo limpio al seleccionar uno de los resultados
-            // TODO: No me convence que si los datos tienen cambio, esto no se entera
-            //if (vm.cacheList == undefined || vm.cacheList.length == 0 || vm.clear) {
+                // Si no está en el caché, la vuelvo a ejecutar, lo limpio al seleccionar uno de los resultados
+                // TODO: No me convence que si los datos tienen cambio, esto no se entera
+                //if (vm.cacheList == undefined || vm.cacheList.length == 0 || vm.clear) {
 
-            vm.searchFunction({
-                callback: function (data) {
-                    vm.cacheList = data;
-                    filter();
-                }
-            });
-            //} else {
-
-            //filter();
-            //}
-        }
-
-        /**
-         * Filtra los datos obtenidos
-         */
-        function filter() {
-            if (vm.cacheList != undefined) {
-                vm.filteredList = [];
-                vm.cacheList.filter(function (e, i, a) {
-                    vm.camposAComparar.forEach(function (elem, index, array) {
-                        if (!vm.filteredList.hasOwnProperty(i)) {
-                            if (e[elem] != null && ((vm.exacto && e[elem].toUpperCase() == vm.searchText.toUpperCase()) ||
-                                (!vm.exacto && e[elem].toUpperCase().indexOf(vm.searchText.toUpperCase()) > -1))) {
-                                return vm.filteredList[i] = e;
-                            }
-                        }
-                    });
+                vm.searchFunction({
+                    callback: function (data) {
+                        vm.cacheList = data;
+                        filter();
+                    }
                 });
-                finish();
+                //} else {
+
+                //filter();
+                //}
             }
 
-        }
-
-
-        /**
-         * Muestra los datos y agrega funciones necesarias para selección, devolución y ocultación de paneles
-         */
-        function finish() {
-            //console.log(vm.filteredList);
-            var panel = document.getElementById("mv-autocomplete-panel-" + vm.id);
-
-            if (panel != null) {
-                panel.remove();
-            }
-
-            var detalle = '';
-
-            // Si la lista está vacía solamente devuelvo un vacío.
-            if (vm.filteredList.length > 0 && vm.searchText.trim().length > 0) {
-                // Genero el detalle a partir de la lista filtrada
-                vm.filteredList.forEach(function (e, i, a) {
-                    detalle = detalle +
-                        '<li id="mv-autocomplete-li-' + i + '" ng-click="$ctrl.select(' + i + ')" ' +
-                        'ng-mouseover="$ctrl.select(' + i + ', $event)" ' +
-                        'ng-class="{\'mv-autocomplete-selected\':$ctrl.indexSelected==\'' + i + '\'}">';
-                    vm.camposAMostrar.forEach(function (elem, index, array) {
-                        if (elem.indexOf('[') > -1) {
-                            var subElems = elem.split('.');
-                            var indice = subElems[0].replace(']', '').substr(elem.indexOf('[') + 1);
-                            var mainElem = subElems[0].substr(0, elem.indexOf('['));
-
-                            detalle = detalle + '<span>' + e[mainElem][indice][subElems[1]] + '</span> '
-                        } else {
-                            detalle = detalle + '<span>' + e[elem] + '</span> '
-                        }
-                    });
-                    detalle = detalle + '</li>';
-                });
-                // Lo agrego luego de la instancia del componente
-                $element.append($compile('<ul class="mv-autocomplete-panel" id="mv-autocomplete-panel-' + vm.id + '">' + detalle + '</ul>')($scope));
-
-                select(Object.keys(vm.filteredList)[0]);
-            } else {
-                select(-1);
-            }
-
-
-        }
-
-        /**
-         * Paso al objeto del controlador padre, el objeto seleccionado y actualizo el indice
-         * @param index
-         */
-        function select(index, event) {
-            $timeout(function () {
-                if (index == -1) {
-                    vm.selectedTo = {};
-                } else {
-
-                    vm.selectedTo = angular.copy(vm.filteredList[index]);
-
-
-                    // arreglo para que el scroll se mueva con el foco
-                    // no se ejecuta en el mouse over, solo este evento envía el event.
-                    if (event == undefined) {
-                        var lu = angular.element(document.querySelector('#mv-autocomplete-panel-' + vm.id));
-
-                        var he = 0;
-                        var encontrado = false;
-                        if (lu[0] != undefined) {
-                            for (var i = 0; i < lu[0].childNodes.length; i++) {
-                                //if (lu[0].childNodes[i].className == 'mv-autocomplete-selected') {
-                                if (lu[0].childNodes[i].id.split('-')[3] == index) {
-                                    encontrado = i;
-                                    break;
-                                } else {
-                                    encontrado = -1;
+            /**
+             * Filtra los datos obtenidos
+             */
+            function filter() {
+                if (vm.cacheList != undefined) {
+                    vm.filteredList = [];
+                    vm.cacheList.filter(function (e, i, a) {
+                        vm.camposAComparar.forEach(function (elem, index, array) {
+                            if (!vm.filteredList.hasOwnProperty(i)) {
+                                if (e[elem] != null && ((vm.exacto && e[elem].toUpperCase() == vm.searchText.toUpperCase()) ||
+                                    (!vm.exacto && e[elem].toUpperCase().indexOf(vm.searchText.toUpperCase()) > -1))) {
+                                    return vm.filteredList[i] = e;
                                 }
                             }
-                            for (var i = 0; i < encontrado; i++) {
-                                he = he + lu[0].childNodes[i].getBoundingClientRect().height;
-                            }
+                        });
+                    });
+                    finish();
+                }
 
-                            if (encontrado == -1) {
-                                lu[0].scrollTop = 0;
+            }
+
+
+            /**
+             * Muestra los datos y agrega funciones necesarias para selección, devolución y ocultación de paneles
+             */
+            function finish() {
+                //console.log(vm.filteredList);
+                var panel = document.getElementById("mv-autocomplete-panel-" + vm.id);
+
+                if (panel != null) {
+                    panel.remove();
+                }
+
+                var detalle = '';
+
+                // Si la lista está vacía solamente devuelvo un vacío.
+                if (vm.filteredList.length > 0 && vm.searchText.trim().length > 0) {
+                    // Genero el detalle a partir de la lista filtrada
+                    vm.filteredList.forEach(function (e, i, a) {
+                        detalle = detalle +
+                            '<li id="mv-autocomplete-li-' + i + '" ng-click="$ctrl.select(' + i + ')" ' +
+                            'ng-mouseover="$ctrl.select(' + i + ', $event)" ' +
+                            'ng-class="{\'mv-autocomplete-selected\':$ctrl.indexSelected==\'' + i + '\'}">';
+                        vm.camposAMostrar.forEach(function (elem, index, array) {
+                            if (elem.indexOf('[') > -1) {
+                                var subElems = elem.split('.');
+                                var indice = subElems[0].replace(']', '').substr(elem.indexOf('[') + 1);
+                                var mainElem = subElems[0].substr(0, elem.indexOf('['));
+
+                                detalle = detalle + '<span>' + e[mainElem][indice][subElems[1]] + '</span> '
                             } else {
-                                lu[0].scrollTop = he;
+                                detalle = detalle + '<span>' + e[elem] + '</span> '
+                            }
+                        });
+                        detalle = detalle + '</li>';
+                    });
+                    // Lo agrego luego de la instancia del componente
+                    $element.append($compile('<ul class="mv-autocomplete-panel" id="mv-autocomplete-panel-' + vm.id + '">' + detalle + '</ul>')($scope));
+
+                    select(Object.keys(vm.filteredList)[0]);
+                } else {
+                    select(-1);
+                }
+
+
+            }
+
+            /**
+             * Paso al objeto del controlador padre, el objeto seleccionado y actualizo el indice
+             * @param index
+             */
+            function select(index, event) {
+                $timeout(function () {
+                    if (index == -1) {
+                        vm.selectedTo = {};
+                    } else {
+
+                        vm.selectedTo = angular.copy(vm.filteredList[index]);
+
+
+                        // arreglo para que el scroll se mueva con el foco
+                        // no se ejecuta en el mouse over, solo este evento envía el event.
+                        if (event == undefined) {
+                            var lu = angular.element(document.querySelector('#mv-autocomplete-panel-' + vm.id));
+
+                            var he = 0;
+                            var encontrado = false;
+                            if (lu[0] != undefined) {
+                                for (var i = 0; i < lu[0].childNodes.length; i++) {
+                                    //if (lu[0].childNodes[i].className == 'mv-autocomplete-selected') {
+                                    if (lu[0].childNodes[i].id.split('-')[3] == index) {
+                                        encontrado = i;
+                                        break;
+                                    } else {
+                                        encontrado = -1;
+                                    }
+                                }
+                                for (var i = 0; i < encontrado; i++) {
+                                    he = he + lu[0].childNodes[i].getBoundingClientRect().height;
+                                }
+
+                                if (encontrado == -1) {
+                                    lu[0].scrollTop = 0;
+                                } else {
+                                    lu[0].scrollTop = he;
+                                }
                             }
                         }
+
+                        // fin arreglo scroll
+
                     }
+                    vm.indexSelected = index;
 
-                    // fin arreglo scroll
 
+                }, 0);
+
+
+            }
+
+            /**
+             * Agrego funcionalidad para cuando se va del control
+             */
+            $element.children().bind('blur', function () {
+                onLeave();
+            });
+
+
+            /**
+             * Agrego funcionalidad para keyup y focus
+             */
+            $element.bind('keyup focus', function (event) {
+                // Me muevo para abajo en la lista
+                if (event.keyCode == 40) {
+
+                    var index = getIndex(vm.indexSelected);
+                    vm.indexSelected = (index.nextIndex == undefined) ? index.firstIndex : index.nextIndex;
+                    select(vm.indexSelected);
+                    moveCursorToEnd();
                 }
-                vm.indexSelected = index;
+
+                // Me muevo para arriba en la lista
+                if (event.keyCode == 38) {
+
+                    var index = getIndex(vm.indexSelected);
+                    vm.indexSelected = (index.prevIndex == undefined) ? index.lastIndex : index.prevIndex;
+                    select(vm.indexSelected);
+                    moveCursorToEnd();
+                }
 
 
-            }, 0);
+                // selecciono
+                if (event.keyCode == 13) {
+                    onLeave()
+                }
 
 
-        }
+            });
 
-        /**
-         * Agrego funcionalidad para cuando se va del control
-         */
-        $element.children().bind('blur', function () {
-            onLeave();
-        });
+            /**
+             * Función asociada al Enter y al abandonar el control. Actualiza la información y remueve el panel.
+             */
+            function onLeave() {
+                if (vm.searchText == undefined || vm.searchText.trim().length == 0 || vm.filteredList.length == 0) {
+                    select(-1);
+                } else {
+                    select(vm.indexSelected);
+                    vm.searchText = vm.selectedTo[vm.camposAMostrar[0]];
+                }
 
-
-        /**
-         * Agrego funcionalidad para keyup y focus
-         */
-        $element.bind('keyup focus', function (event) {
-            // Me muevo para abajo en la lista
-            if (event.keyCode == 40) {
-
-                var index = getIndex(vm.indexSelected);
-                vm.indexSelected = (index.nextIndex == undefined) ? index.firstIndex : index.nextIndex;
-                select(vm.indexSelected);
-                moveCursorToEnd();
+                var panel = document.getElementById("mv-autocomplete-panel-" + vm.id);
+                if (panel != null) {
+                    panel.remove();
+                }
             }
 
-            // Me muevo para arriba en la lista
-            if (event.keyCode == 38) {
-
-                var index = getIndex(vm.indexSelected);
-                vm.indexSelected = (index.prevIndex == undefined) ? index.lastIndex : index.prevIndex;
-                select(vm.indexSelected);
-                moveCursorToEnd();
+            /**
+             * muevo siempre el cursor al final el input, solo para comodidad del usuario
+             */
+            function moveCursorToEnd() {
+                var tmp = vm.searchText;
+                vm.searchText = '';
+                $timeout(function () {
+                    vm.searchText = tmp;
+                }, 0);
             }
 
-
-            // selecciono
-            if (event.keyCode == 13) {
-                onLeave()
+            /**
+             * función auxiliar para obtener el index del array de resultados, esto hay que hacerlo ya que
+             * javascript no soporta agregar nombre de propiedad y además index numérico.
+             * @param prop
+             * @returns {{nextIndex: *, prevIndex: *, firstIndex: *, lastIndex: *}}
+             */
+            function getIndex(prop) {
+                var listaProps = Object.keys(vm.filteredList);
+                var actualIndex = listaProps.indexOf(prop);
+                var nextIndex = listaProps[actualIndex + 1];
+                var prevIndex = listaProps[actualIndex - 1];
+                var firstIndex = listaProps[0];
+                var lastIndex = listaProps[listaProps.length - 1];
+                return {nextIndex: nextIndex, prevIndex: prevIndex, firstIndex: firstIndex, lastIndex: lastIndex};
             }
+        },100);
 
-
-        });
-
-        /**
-         * Función asociada al Enter y al abandonar el control. Actualiza la información y remueve el panel.
-         */
-        function onLeave() {
-            if (vm.searchText == undefined || vm.searchText.trim().length == 0 || vm.filteredList.length == 0) {
-                select(-1);
-            } else {
-                select(vm.indexSelected);
-                vm.searchText = vm.selectedTo[vm.camposAMostrar[0]];
-            }
-
-            var panel = document.getElementById("mv-autocomplete-panel-" + vm.id);
-            if (panel != null) {
-                panel.remove();
-            }
-        }
-
-        /**
-         * muevo siempre el cursor al final el input, solo para comodidad del usuario
-         */
-        function moveCursorToEnd() {
-            var tmp = vm.searchText;
-            vm.searchText = '';
-            $timeout(function () {
-                vm.searchText = tmp;
-            }, 0);
-        }
-
-        /**
-         * función auxiliar para obtener el index del array de resultados, esto hay que hacerlo ya que
-         * javascript no soporta agregar nombre de propiedad y además index numérico.
-         * @param prop
-         * @returns {{nextIndex: *, prevIndex: *, firstIndex: *, lastIndex: *}}
-         */
-        function getIndex(prop) {
-            var listaProps = Object.keys(vm.filteredList);
-            var actualIndex = listaProps.indexOf(prop);
-            var nextIndex = listaProps[actualIndex + 1];
-            var prevIndex = listaProps[actualIndex - 1];
-            var firstIndex = listaProps[0];
-            var lastIndex = listaProps[listaProps.length - 1];
-            return {nextIndex: nextIndex, prevIndex: prevIndex, firstIndex: firstIndex, lastIndex: lastIndex};
-        }
     }
 
 })();
