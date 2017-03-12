@@ -50,11 +50,6 @@
             // identificador único del scope dentro la vista
             vm.id = $scope.$id;
 
-            console.log(vm.searchFields);
-            console.log(vm.fieldsToShow);
-            //vm.searchFields = "nombre";
-            //vm.fieldsToShow = "nombre";
-
             vm.indexSelected = -1;
             vm.searchText = '';
             vm.cacheList = [];
